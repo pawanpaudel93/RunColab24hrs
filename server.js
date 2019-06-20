@@ -8,17 +8,18 @@ app.use(express.static(__dirname + '/public'));
 
 app.get('/', (req, res)=>{
 	(async () => {
-		ACCOUNTS = [[process.env.COLAB_URL1, process.env.GMAIL_USERNAME1, process.env.GMAIL_PASSWORD1], [process.env.COLAB_URL2, process.env.GMAIL_USERNAME2, process.env.GMAIL_PASSWORD2]]
+		ACCOUNTS = [[process.env.COLAB_URL1, process.env.GMAIL_USERNAME1, process.env.GMAIL_PASSWORD1, process.env.CODE_URL1], [process.env.COLAB_URL2, process.env.GMAIL_USERNAME2, process.env.GMAIL_PASSWORD2, process.env.CODE_URL2]]
 		for (let i = 0; i<ACCOUNTS.length; i++){
-			const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: true, defaultViewport: null});
-			// const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: false, defaultViewport: null});
-			console.log('Browser opened');
-			const page = await browser.newPage(); 
-			await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36');
 			const USERNAME_SELECTOR = '#identifierId'
 			const BUTTON_SELECTOR1 = '#identifierNext > div.ZFr60d.CeoRYc'
 			const PASSWORD_SELECTOR = '#password > div.aCsJod.oJeWuf > div > div.Xb9hP > input'
 			const BUTTON_SELECTOR2 = '#passwordNext > div.ZFr60d.CeoRYc'
+			
+			const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: true, defaultViewport: null});
+			// const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: false, defaultViewport: null});
+			console.log('Browser opened');
+			const page = await browser.newPage();
+			await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36');
 			const FILE = '#file-menu-button > div > div > div.goog-inline-block.goog-menu-button-caption'
 			const SAVE = '#\\:h > div'
 			await page.goto(ACCOUNTS[i][0], {waitUntil: 'networkidle2'});
@@ -42,35 +43,85 @@ app.get('/', (req, res)=>{
 			await page.screenshot({path: __dirname +`/public/screenshot3${i}.png`});
 			await page.click(BUTTON_SELECTOR2);
 			console.log('Finished entering password and clicked LOGIN');
-			// await page.waitForNavigation();
-			// await page.goto(process.env.COLAB_URL);
-			// await page.waitForNavigation();
+		
 			await page.waitFor(3000);
 			await page.screenshot({path: __dirname +`/public/screenshot4${i}.png`});
 			console.log('success');
 
 			await page.waitFor(3000);
 			await page.screenshot({path: __dirname +`/public/screenshot5${i}.png`});
+			
+			await page.waitFor(20000);
+			const sts = await page.evaluate(()=>{
+				return document.querySelector("#connect-button-resource-display > div").innerText;
+			});
 
-			await page.waitFor(60000);
+			console.log(sts);
+			
+			if (sts != 'BUSY'){
+				const incognito = await puppeteer.launch({args: ['--no-sandbox', '--incognito', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: true, defaultViewport: null});
+				// const incognito = await puppeteer.launch({args: ['--no-sandbox', '--incognito', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: false, defaultViewport: null});
+				const page1 = await incognito.newPage();
+				// await page1.bringToFront();
+				await page1.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36');
+				await page1.goto(ACCOUNTS[i][3]);
+				await page1.waitFor(5000);
+				await page1.waitForSelector(USERNAME_SELECTOR);
+				await page1.click(USERNAME_SELECTOR);
+				await page1.keyboard.type(ACCOUNTS[i][1]);
+				await page1.waitFor(3000);
+				await page1.click(BUTTON_SELECTOR1);
+				// console.log('Finished entering username and clicked NEXT');
+				await page1.waitFor(3000);
+				// await page.waitForNavigation();
+				// console.log('Selecting password');
+				await page1.waitFor(3000);
+				await page1.waitForSelector(PASSWORD_SELECTOR);
+				await page1.click(PASSWORD_SELECTOR);
+				await page1.keyboard.type(ACCOUNTS[i][2]);
+				await page1.waitFor(3000);
+				await page1.click(BUTTON_SELECTOR2);
+				// console.log('Finished entering password and clicked LOGIN');
+				// console.log('success');
+				await page1.waitFor(10000);
+				await page1.click("#submit_approve_access > div.ZFr60d.CeoRYc")
+				await page1.waitFor(5000);
+				const code = await page1.evaluate(()=>{
+					return document.querySelector("#view_container > div > div > div.pwWryf.bxPAYd > div > div > div > form > span > section > div > span > div > div > div > textarea").innerHTML;
+				});
+				console.log(code);
+				await incognito.close();
+
+				await page.waitFor(10000);
+				await page.keyboard.down('Control');
+				await page.keyboard.press('F9');
+				await page.keyboard.up('Control');
+				await page.waitFor(30000);
+				await page.keyboard.type(code);
+				await page.waitFor(20000);
+				await page.keyboard.press('Enter');		
+				console.log('Ultimate Success');
+			}
+			await page.waitFor(30000);
 			await page.waitForSelector(FILE);
 			console.log('File Selector Found');
 			await page.click(FILE);
 			await page.waitForSelector(SAVE);
 			console.log('Save selector found');
-			await page.click(SAVE);
+			// await page.click(SAVE);
 			await page.screenshot({path: __dirname +`/public/screenshot6${i}.png`});
 			await page.waitFor(3000);
-			const status = await page.evaluate(()=>{
-				return document.querySelector("#connect > paper-button > span").innerText;
+			const stat = await page.evaluate(()=>{
+				return document.querySelector("#connect-button-resource-display > div").innerText;
 			});
 
-			console.log('colab saved sucessfully', status);
+			console.log('colab saved sucessfully', stat);
 			await page.close();
 			await browser.close();
 			console.log('Browser Closed');
 			console.log('GOing for next ACCount');
 		}
+		console.log('All accounts opened...');
 		
 	})();
 	res.end('<html><head></title></head><body><h1>Browser is running. You gotta chill Bro...</img></h1></body></html>');

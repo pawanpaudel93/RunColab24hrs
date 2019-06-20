@@ -1,5 +1,5 @@
 {
-  "name": "colab-always-on",
+  "name": "RunColab24hrs",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
-  "author": "",
+  "author": "Pawan Paudel",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^8.0.0",
