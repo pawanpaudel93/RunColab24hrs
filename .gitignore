@@ -1,3 +1,5 @@
 node_modules
 .env
 screenshot*.png
+temp.js
+.env-per

@@ -8,34 +8,37 @@ app.use(express.static(__dirname + '/public'));
 
 app.get('/', (req, res)=>{
 	(async () => {
-		ACCOUNTS = [[process.env.COLAB_URL1, process.env.GMAIL_USERNAME1, process.env.GMAIL_PASSWORD1, process.env.CODE_URL1], [process.env.COLAB_URL2, process.env.GMAIL_USERNAME2, process.env.GMAIL_PASSWORD2, process.env.CODE_URL2]]
+		waitmsecs = Number(process.env.waitTime);
+		ACCOUNTS = [[process.env.COLAB_URL1, process.env.GMAIL_USERNAME1, process.env.GMAIL_PASSWORD1, process.env.CODE_URL1], 
+		[process.env.COLAB_URL2, process.env.GMAIL_USERNAME2, process.env.GMAIL_PASSWORD2, process.env.CODE_URL2]]
 		for (let i = 0; i<ACCOUNTS.length; i++){
 			const USERNAME_SELECTOR = '#identifierId'
 			const BUTTON_SELECTOR1 = '#identifierNext > div.ZFr60d.CeoRYc'
 			const PASSWORD_SELECTOR = '#password > div.aCsJod.oJeWuf > div > div.Xb9hP > input'
 			const BUTTON_SELECTOR2 = '#passwordNext > div.ZFr60d.CeoRYc'
 			
-			const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: true, defaultViewport: null});
-			// const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: false, defaultViewport: null});
+			const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: true, defaultViewport: null, devtools:true});
+			// const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: false, defaultViewport: null, devtools:true});
 			console.log('Browser opened');
 			const page = await browser.newPage();
 			await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36');
 			const FILE = '#file-menu-button > div > div > div.goog-inline-block.goog-menu-button-caption'
 			const SAVE = '#\\:h > div'
-			await page.goto(ACCOUNTS[i][0], {waitUntil: 'networkidle2'});
+			await page.goto(ACCOUNTS[i][0]);
+			await page.waitFor(waitmsecs);
 			await page.waitFor(3000);
 			console.log('Selecting username');
 			// await page.waitForNavigation();
+			await page.waitFor(waitmsecs);
 			await page.waitForSelector(USERNAME_SELECTOR);
 			await page.screenshot({path: __dirname +`/public/screenshot1${i}.png`});
 			await page.click(USERNAME_SELECTOR);
 			await page.keyboard.type(ACCOUNTS[i][1]);
 			await page.click(BUTTON_SELECTOR1);
 			console.log('Finished entering username and clicked NEXT');
-			await page.waitFor(3000);
 			// await page.waitForNavigation();
 			console.log('Selecting password');
-			await page.waitFor(3000);
+			await page.waitFor(waitmsecs);
 			await page.waitForSelector(PASSWORD_SELECTOR);
 			await page.screenshot({path: __dirname +`/public/screenshot2${i}.png`});
 			await page.click(PASSWORD_SELECTOR);
@@ -53,29 +56,28 @@ app.get('/', (req, res)=>{
 			
 			await page.waitFor(20000);
 			const sts = await page.evaluate(()=>{
-				return document.querySelector("#connect-button-resource-display > div").innerText;
+				return document.querySelector("#connect > paper-button").innerText;
 			});
 
 			console.log(sts);
 			
-			if (sts != 'BUSY'){
-				const incognito = await puppeteer.launch({args: ['--no-sandbox', '--incognito', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: true, defaultViewport: null});
+			if (sts != 'BUSY' && process.env.RESUME != false){
+				const incognito = await puppeteer.launch({args: ['--no-sandbox', '--incognito', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: true, defaultViewport: null, devtools:true});
 				// const incognito = await puppeteer.launch({args: ['--no-sandbox', '--incognito', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: false, defaultViewport: null});
 				const page1 = await incognito.newPage();
 				// await page1.bringToFront();
 				await page1.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36');
 				await page1.goto(ACCOUNTS[i][3]);
-				await page1.waitFor(5000);
+				await page.waitFor(waitmsecs);
 				await page1.waitForSelector(USERNAME_SELECTOR);
 				await page1.click(USERNAME_SELECTOR);
 				await page1.keyboard.type(ACCOUNTS[i][1]);
 				await page1.waitFor(3000);
 				await page1.click(BUTTON_SELECTOR1);
 				// console.log('Finished entering username and clicked NEXT');
-				await page1.waitFor(3000);
+				await page.waitFor(waitmsecs);
 				// await page.waitForNavigation();
 				// console.log('Selecting password');
-				await page1.waitFor(3000);
 				await page1.waitForSelector(PASSWORD_SELECTOR);
 				await page1.click(PASSWORD_SELECTOR);
 				await page1.keyboard.type(ACCOUNTS[i][2]);
@@ -108,11 +110,11 @@ app.get('/', (req, res)=>{
 			await page.click(FILE);
 			await page.waitForSelector(SAVE);
 			console.log('Save selector found');
-			// await page.click(SAVE);
+			await page.click(SAVE);
 			await page.screenshot({path: __dirname +`/public/screenshot6${i}.png`});
 			await page.waitFor(3000);
 			const stat = await page.evaluate(()=>{
-				return document.querySelector("#connect-button-resource-display > div").innerText;
+				return document.querySelector("#connect > paper-button").innerText;
 			});
 
 			console.log('colab saved sucessfully', stat);
