@@ -3,3 +3,4 @@ node_modules
 screenshot*.png
 temp.js
 .env-per
+test.js

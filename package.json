@@ -14,7 +14,9 @@
     "express": "^4.17.1",
     "heroku-proxy": "^2.1.1",
     "http-proxy": "^1.17.0",
-    "puppeteer": "^1.17.0",
+    "puppeteer": "^1.19.0",
+    "puppeteer-extra": "^2.1.3",
+    "puppeteer-extra-plugin-stealth": "^2.2.2",
     "read-env": "^1.3.0"
   }
 }

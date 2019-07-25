@@ -1,4 +1,8 @@
-const puppeteer = require('puppeteer');
+// const puppeteer = require('puppeteer');
+const puppeteer = require("puppeteer-extra")
+const pluginStealth = require("puppeteer-extra-plugin-stealth")
+puppeteer.use(pluginStealth())
+
 require('dotenv').config();
 const express = require('express');
 
@@ -17,8 +21,8 @@ app.get('/', (req, res)=>{
 			const PASSWORD_SELECTOR = '#password > div.aCsJod.oJeWuf > div > div.Xb9hP > input'
 			const BUTTON_SELECTOR2 = '#passwordNext > div.ZFr60d.CeoRYc'
 			
-			const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: true, defaultViewport: null, devtools:true});
-			// const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: false, defaultViewport: null, devtools:true});
+			const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: true, defaultViewport: null});
+			// const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: false, defaultViewport: null});
 			console.log('Browser opened');
 			const page = await browser.newPage();
 			await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36');
@@ -61,8 +65,8 @@ app.get('/', (req, res)=>{
 
 			console.log(sts);
 			
-			if (sts != 'BUSY' && process.env.RESUME != false){
-				const incognito = await puppeteer.launch({args: ['--no-sandbox', '--incognito', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: true, defaultViewport: null, devtools:true});
+			if (sts != 'Busy' && process.env.RESUME != false){
+				const incognito = await puppeteer.launch({args: ['--no-sandbox', '--incognito', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: true, defaultViewport: null});
 				// const incognito = await puppeteer.launch({args: ['--no-sandbox', '--incognito', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: false, defaultViewport: null});
 				const page1 = await incognito.newPage();
 				// await page1.bringToFront();
