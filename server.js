@@ -14,8 +14,9 @@ app.get('/', (req, res)=>{
 	(async () => {
 		waitmsecs = Number(process.env.waitTime);
 		ACCOUNTS = [[process.env.COLAB_URL1, process.env.GMAIL_USERNAME1, process.env.GMAIL_PASSWORD1, process.env.CODE_URL1], 
-		[process.env.COLAB_URL2, process.env.GMAIL_USERNAME2, process.env.GMAIL_PASSWORD2, process.env.CODE_URL2]]
-		for (let i = 0; i<ACCOUNTS.length; i++){
+		[process.env.COLAB_URL2, process.env.GMAIL_USERNAME2, process.env.GMAIL_PASSWORD2, process.env.CODE_URL2],
+		[process.env.COLAB_URL3, process.env.GMAIL_USERNAME3, process.env.GMAIL_PASSWORD3, process.env.CODE_URL3]]
+		for (let i = 0; i<process.env.ACCOUNTS; i++){
 			const USERNAME_SELECTOR = '#identifierId'
 			const BUTTON_SELECTOR1 = '#identifierNext > div.ZFr60d.CeoRYc'
 			const PASSWORD_SELECTOR = '#password > div.aCsJod.oJeWuf > div > div.Xb9hP > input'
@@ -67,7 +68,7 @@ app.get('/', (req, res)=>{
 			
 			if (sts != 'Busy' && process.env.RESUME != false){
 				const incognito = await puppeteer.launch({args: ['--no-sandbox', '--incognito', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: true, defaultViewport: null});
-				// const incognito = await puppeteer.launch({args: ['--no-sandbox', '--incognito', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: false, defaultViewport: null});
+				// const incognito = await puppeteer.launch({args: ['--no-sanSdbox', '--incognito', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: false, defaultViewport: null});
 				const page1 = await incognito.newPage();
 				// await page1.bringToFront();
 				await page1.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36');
@@ -93,7 +94,7 @@ app.get('/', (req, res)=>{
 				await page1.click("#submit_approve_access > div.ZFr60d.CeoRYc")
 				await page1.waitFor(5000);
 				const code = await page1.evaluate(()=>{
-					return document.querySelector("#view_container > div > div > div.pwWryf.bxPAYd > div > div > div > form > span > section > div > span > div > div > div > textarea").innerHTML;
+					return document.querySelector("#view_container > div > div > div.pwWryf.bxPAYd > div > div > div > form > span > section > div > div > div > div > div > textarea").innerHTML;
 				});
 				console.log(code);
 				await incognito.close();
@@ -122,9 +123,11 @@ app.get('/', (req, res)=>{
 			});
 
 			console.log('colab saved sucessfully', stat);
-			await page.close();
-			await browser.close();
-			console.log('Browser Closed');
+			setTimeout(async()=>{
+				await page.close();
+				await browser.close();
+				console.log('Browser Closed');
+			}, 1440000);
 			console.log('GOing for next ACCount');
 		}
 		console.log('All accounts opened...');
