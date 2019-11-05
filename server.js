@@ -13,9 +13,9 @@ app.use(express.static(__dirname + '/public'));
 app.get('/', (req, res)=>{
 	(async () => {
 		waitmsecs = Number(process.env.waitTime);
-		ACCOUNTS = [[process.env.COLAB_URL1, process.env.GMAIL_USERNAME1, process.env.GMAIL_PASSWORD1, process.env.CODE_URL1], 
-		[process.env.COLAB_URL2, process.env.GMAIL_USERNAME2, process.env.GMAIL_PASSWORD2, process.env.CODE_URL2],
-		[process.env.COLAB_URL3, process.env.GMAIL_USERNAME3, process.env.GMAIL_PASSWORD3, process.env.CODE_URL3]]
+		ACCOUNTS = [[process.env.COLAB_URL1, process.env.GMAIL_USERNAME1, process.env.GMAIL_PASSWORD1, process.env.CODE_URL], 
+		[process.env.COLAB_URL2, process.env.GMAIL_USERNAME2, process.env.GMAIL_PASSWORD2, process.env.CODE_URL],
+		[process.env.COLAB_URL3, process.env.GMAIL_USERNAME3, process.env.GMAIL_PASSWORD3, process.env.CODE_URL]]
 		for (let i = 0; i<process.env.ACCOUNTS; i++){
 			const USERNAME_SELECTOR = '#identifierId'
 			const BUTTON_SELECTOR1 = '#identifierNext > div.ZFr60d.CeoRYc'
@@ -73,6 +73,10 @@ app.get('/', (req, res)=>{
 				// await page1.bringToFront();
 				await page1.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36');
 				await page1.goto(ACCOUNTS[i][3]);
+				if (process.env.USE_GDRIVE) {
+					ACCOUNTS[i][1] = process.env.GDRIVE_USERNAME
+					ACCOUNTS[i][2] = process.env.GDRIVE_PASSWORD
+				}
 				await page.waitFor(waitmsecs);
 				await page1.waitForSelector(USERNAME_SELECTOR);
 				await page1.click(USERNAME_SELECTOR);
@@ -105,7 +109,7 @@ app.get('/', (req, res)=>{
 				await page.keyboard.up('Control');
 				await page.waitFor(30000);
 				await page.keyboard.type(code);
-				await page.waitFor(20000);
+				await page.waitFor(10000);
 				await page.keyboard.press('Enter');		
 				console.log('Ultimate Success');
 			}
