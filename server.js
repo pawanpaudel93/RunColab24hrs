@@ -1,29 +1,28 @@
 // const puppeteer = require('puppeteer');
 const puppeteer = require("puppeteer-extra")
 const pluginStealth = require("puppeteer-extra-plugin-stealth")
-puppeteer.use(pluginStealth())
-
-require('dotenv').config();
+require('./set-env')();
 const express = require('express');
 
 const app = express();
-
+puppeteer.use(pluginStealth())
 app.use(express.static(__dirname + '/public'));
 
 app.get('/', (req, res)=>{
 	(async () => {
-		waitmsecs = Number(process.env.waitTime);
-		ACCOUNTS = [[process.env.COLAB_URL1, process.env.GMAIL_USERNAME1, process.env.GMAIL_PASSWORD1, process.env.CODE_URL], 
-		[process.env.COLAB_URL2, process.env.GMAIL_USERNAME2, process.env.GMAIL_PASSWORD2, process.env.CODE_URL],
-		[process.env.COLAB_URL3, process.env.GMAIL_USERNAME3, process.env.GMAIL_PASSWORD3, process.env.CODE_URL]]
-		for (let i = 0; i<process.env.ACCOUNTS; i++){
+        waitmsecs = Number(process.env['waitTime']);
+        var ACCOUNTS = []
+        for (let i=1;i<=3;i++) {
+            ACCOUNTS.push([process.env['COLAB_URL'+i], process.env['GMAIL_USERNAME' + i], process.env['GMAIL_PASSWORD' + i], process.env['CODE_URL']])
+        }
+		for (let i = 0; i<Number(process.env['ACCOUNTS']); i++){
 			const USERNAME_SELECTOR = '#identifierId'
 			const BUTTON_SELECTOR1 = '#identifierNext > div.ZFr60d.CeoRYc'
 			const PASSWORD_SELECTOR = '#password > div.aCsJod.oJeWuf > div > div.Xb9hP > input'
 			const BUTTON_SELECTOR2 = '#passwordNext > div.ZFr60d.CeoRYc'
 			
-			const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: true, defaultViewport: null});
-			// const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: false, defaultViewport: null});
+			const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${process.env['PROXY']}`], headless: true, defaultViewport: null});
+			// const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${process.env['PROXY']}`], headless: false, defaultViewport: null});
 			console.log('Browser opened');
 			const page = await browser.newPage();
 			await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36');
@@ -66,16 +65,16 @@ app.get('/', (req, res)=>{
 
 			console.log(sts);
 			
-			if (sts != 'Busy' && process.env.RESUME != false){
-				const incognito = await puppeteer.launch({args: ['--no-sandbox', '--incognito', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: true, defaultViewport: null});
-				// const incognito = await puppeteer.launch({args: ['--no-sanSdbox', '--incognito', '--disable-setuid-sandbox', `--proxy-server=${process.env.PROXY}`], headless: false, defaultViewport: null});
+			if (sts != 'Busy' && process.env['RESUME'] != false){
+				const incognito = await puppeteer.launch({args: ['--no-sandbox', '--incognito', '--disable-setuid-sandbox', `--proxy-server=${process.env['PROXY']}`], headless: true, defaultViewport: null});
+				// const incognito = await puppeteer.launch({args: ['--no-sanSdbox', '--incognito', '--disable-setuid-sandbox', `--proxy-server=${process.env['PROXY']}`], headless: false, defaultViewport: null});
 				const page1 = await incognito.newPage();
 				// await page1.bringToFront();
 				await page1.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36');
 				await page1.goto(ACCOUNTS[i][3]);
-				if (process.env.USE_GDRIVE) {
-					ACCOUNTS[i][1] = process.env.GDRIVE_USERNAME
-					ACCOUNTS[i][2] = process.env.GDRIVE_PASSWORD
+				if (process.env['USE_GDRIVE']) {
+					ACCOUNTS[i][1] = process.env['GDRIVE_USERNAME']
+					ACCOUNTS[i][2] = process.env['GDRIVE_PASSWORD']
 				}
 				await page.waitFor(waitmsecs);
 				await page1.waitForSelector(USERNAME_SELECTOR);
@@ -109,7 +108,7 @@ app.get('/', (req, res)=>{
 				await page.keyboard.up('Control');
 				await page.waitFor(30000);
 				await page.keyboard.type(code);
-				await page.waitFor(10000);
+				await page.waitFor(15000);
 				await page.keyboard.press('Enter');		
 				console.log('Ultimate Success');
 			}
@@ -126,12 +125,11 @@ app.get('/', (req, res)=>{
 				return document.querySelector("#connect > paper-button").innerText;
 			});
 
-			console.log('colab saved sucessfully', stat);
-			setTimeout(async()=>{
-				await page.close();
-				await browser.close();
-				console.log('Browser Closed');
-			}, 1440000);
+            console.log('colab saved sucessfully', stat);
+            await page.waitFor(30000) // waiting for 5 minutes before closing the browser and going to next account
+            await page.close();
+            await browser.close();
+            console.log('Browser Closed');
 			console.log('GOing for next ACCount');
 		}
 		console.log('All accounts opened...');
@@ -139,8 +137,9 @@ app.get('/', (req, res)=>{
 	})();
 	res.end('<html><head></title></head><body><h1>Browser is running. You gotta chill Bro...</img></h1></body></html>');
 });
+
 app.get('/screenshot', (req, res)=>{
-	res.end('<html><head></title></head><body><img src="screenshot10.png"></img><img src="screenshot20.png"></img><img src="screenshot30.png"></img><img src="screenshot40.png"></img><img src="screenshot50.png"></img><img src="screenshot60.png"></img><h1>NEXT</h1><img src="screenshot11.png"></img><img src="screenshot21.png"></img><img src="screenshot31.png"></img><img src="screenshot41.png"></img><img src="screenshot51.png"></img><img src="screenshot61.png"></img></body></html>');
+	res.sendFile(__dirname +`/public/screenshots.html`)
 
 })
 
